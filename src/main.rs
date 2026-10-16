@@ -1,3 +1,5 @@
+use std::vec;
+
 use realfft::RealFftPlanner;
 
 fn get_sin(freq:f32, taux:f32, n:usize)->Vec<f32>{
@@ -45,6 +47,21 @@ fn applies_hann(signal: &mut Vec<f32>){
         signal[i]=signal[i]*w;
     }
 }
+fn calcul_fk(f_max:f32,f_min:f32,n_barres:usize,k:usize)->f32{
+    f_min*(f_max/f_min).powf((k as f32)/(n_barres as f32))
+}
+fn get_bandes(amplitudes:&Vec<f32>,_taux:f32,n_barres:usize)->Vec<f32>{
+    let _n_fft=(amplitudes.len()-1)*2;
+    let f_min:f32=50.0;
+    let f_max:f32=12000.0;
+    let mut all_fk:Vec<f32>=Vec::new();
+    if n_barres==0{return all_fk;}
+    for i in 0..n_barres{
+        all_fk.push(calcul_fk(f_max, f_min, n_barres, i));
+        
+    }
+    all_fk
+}
 
 fn main() {
     let freq:f32=440.0;
@@ -59,8 +76,9 @@ fn main() {
     applies_hann(&mut signal);
     let test=get_amplitudes(&signal);
     println!("{}",i_max(&test));
-    
+    let bandes=get_bandes(&test, taux, 32);
     for i in 15..45{
         println!("bin {} : {:.1}", i, test[i]);
+        println!("bande {}",bandes[i-15])
     }
 }
