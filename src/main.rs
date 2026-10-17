@@ -1,4 +1,6 @@
 
+use std::{thread::sleep, time::Duration};
+
 use realfft::RealFftPlanner;
 
 fn get_sin(freq:f32, taux:f32, n:usize)->Vec<f32>{
@@ -88,24 +90,68 @@ fn amplitude_to_decibels(amplitude:f32,nfft:usize)->f32{
 fn normalize(db:f32,plafond:f32,plancher:f32)->f32{
     ((db-plancher)/(plafond-plancher)).clamp(0.0, 1.0)
 }
+struct Lisseur {
+    son: Vec<f32>,
+    k:f32
+}
+impl Lisseur {
+    fn new(n_barres:usize)->Lisseur{
+        Lisseur{son: vec![0.0;n_barres], k:0.2}
+    }
+    fn update(&mut self, target: &Vec<f32>){
+        if self.son.len()!=target.len(){return}
+        for i in 0..self.son.len(){
+            if target[i]>=self.son[i]{
+                self.son[i]=target[i];
+            }
+            else{
+                self.son[i]=self.son[i]+(target[i]-self.son[i])*self.k;
+            }
+        }
+    }
+    fn frac_to_percent(&self)->Vec<u32>{
+        let mut percent=vec![0;self.son.len()];
+        for i in 0..self.son.len(){
+            percent[i]=((self.son[i]*100.0).round()) as u32;
+        }
+        percent
+}
+}
+fn to_line(son:&[u32])->String{
+    let mut txt=String::new();
+    for i in 0..son.len(){
+        if i>0 {txt.push(';');}
+        txt.push_str(&son[i].to_string())
+    }
+    txt
+}
+fn analyse(signal:&mut Vec<f32>,taux:f32,n_barres:usize,plafond:f32,plancher:f32)->Vec<f32>{
+    applies_hann(signal);
+    let amplitude=get_amplitudes(signal);
+    let mut bandes=get_bandes(&amplitude, taux, n_barres);
+    for i in 0..bandes.len(){
+        bandes[i]=amplitude_to_decibels(bandes[i], signal.len());
+        bandes[i]=normalize(bandes[i], plafond, plancher);
+    }
+    bandes
+}
 fn main() {
     let freq:f32=440.0;
     let taux:f32=44100.0;
     let n:usize=2048;
     let plafond=0.0;
     let plancher=-80.0;
+    let n_barres=32;
+    let mut lisseur=Lisseur::new(n_barres);
+    let mut frame: u32 = 0;
+    loop{
+        let mut echantillons=get_sin(freq+(5.0*(frame as f32)), taux, n);
+        let barres=analyse(&mut echantillons,taux,n_barres,plafond,plancher);
+        lisseur.update(&barres);
+        let barres_sizes=lisseur.frac_to_percent();
+        println!("{}",to_line(&barres_sizes));
+        sleep(Duration::from_millis(10));
+        frame+=1;
+    }
     
-    let mut signal=get_sin(freq, taux, n);
-    let signal2=get_sin(freq*2.0,taux,n);
-    for i in 0..signal.len(){
-        signal[i]=signal[i]+signal2[i];
-    }
-    applies_hann(&mut signal);
-    let test=get_amplitudes(&signal);
-    println!("{}",i_max(&test));
-    let mut bandes=get_bandes(&test, taux, 32);
-    for i in 0..32{
-        bandes[i]=normalize(amplitude_to_decibels(bandes[i], n), plafond, plancher);
-        println!("{}",bandes[i]);
-    }
 }
