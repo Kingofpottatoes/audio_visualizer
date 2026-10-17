@@ -1,4 +1,3 @@
-use std::vec;
 
 use realfft::RealFftPlanner;
 
@@ -50,23 +49,51 @@ fn applies_hann(signal: &mut Vec<f32>){
 fn calcul_fk(f_max:f32,f_min:f32,n_barres:usize,k:usize)->f32{
     f_min*(f_max/f_min).powf((k as f32)/(n_barres as f32))
 }
-fn get_bandes(amplitudes:&Vec<f32>,_taux:f32,n_barres:usize)->Vec<f32>{
-    let _n_fft=(amplitudes.len()-1)*2;
+fn get_bandes(amplitudes:&Vec<f32>,taux:f32,n_barres:usize)->Vec<f32>{
+    let n_fft=(amplitudes.len()-1)*2;
     let f_min:f32=50.0;
     let f_max:f32=12000.0;
-    let mut all_fk:Vec<f32>=Vec::new();
-    if n_barres==0{return all_fk;}
+    let mut sliced_amplitudes=Vec::new();
+    if n_barres==0{return Vec::new();}
     for i in 0..n_barres{
-        all_fk.push(calcul_fk(f_max, f_min, n_barres, i));
-        
+        let fk_min=calcul_fk(f_max, f_min, n_barres, i);
+        let fk_max=calcul_fk(f_max, f_min, n_barres, i+1);
+        let mut debut=get_bin(fk_min,n_fft,taux);
+        let mut fin=get_bin(fk_max,n_fft,taux);
+        debut=debut.min(amplitudes.len());
+        fin=fin.max(debut+1);
+        fin=fin.min(amplitudes.len());
+        sliced_amplitudes.push(get_max(&amplitudes[debut..fin]));
     }
-    all_fk
+    sliced_amplitudes
 }
-
+fn get_bin(freq:f32,n_nfft:usize,taux:f32)->usize{
+    (freq* ((n_nfft as f32)/taux)).round() as usize
+}
+fn get_max(vec:&[f32])->f32{
+    let mut  i_max=0;
+    if vec.len()==0{
+        return 0.0;
+    }
+    for i in 0..vec.len(){
+        if vec[i_max]<vec[i]{
+            i_max=i;
+        }
+    }
+    vec[i_max]
+}
+fn amplitude_to_decibels(amplitude:f32,nfft:usize)->f32{
+    20.0*((amplitude/((nfft as f32)/4.0)).max(1e-6).log10())
+}
+fn normalize(db:f32,plafond:f32,plancher:f32)->f32{
+    ((db-plancher)/(plafond-plancher)).clamp(0.0, 1.0)
+}
 fn main() {
     let freq:f32=440.0;
     let taux:f32=44100.0;
     let n:usize=2048;
+    let plafond=0.0;
+    let plancher=-80.0;
     
     let mut signal=get_sin(freq, taux, n);
     let signal2=get_sin(freq*2.0,taux,n);
@@ -76,9 +103,9 @@ fn main() {
     applies_hann(&mut signal);
     let test=get_amplitudes(&signal);
     println!("{}",i_max(&test));
-    let bandes=get_bandes(&test, taux, 32);
-    for i in 15..45{
-        println!("bin {} : {:.1}", i, test[i]);
-        println!("bande {}",bandes[i-15])
+    let mut bandes=get_bandes(&test, taux, 32);
+    for i in 0..32{
+        bandes[i]=normalize(amplitude_to_decibels(bandes[i], n), plafond, plancher);
+        println!("{}",bandes[i]);
     }
 }
