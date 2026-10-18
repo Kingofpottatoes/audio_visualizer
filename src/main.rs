@@ -1,6 +1,6 @@
-use std::io::Read;
 use std::process::{ChildStdout, Command, Stdio};
 use realfft::{RealFftPlanner, RealToComplex};
+use std::io::{Read, Write};
 
 fn _get_sin(freq:f32, taux:f32, n:usize)->Vec<f32>{
     let mut echantillon = vec![0.0f32;n];
@@ -93,8 +93,8 @@ struct Lisseur {
     k:f32
 }
 impl Lisseur {
-    fn new(n_barres:usize)->Lisseur{
-        Lisseur{son: vec![0.0;n_barres], k:0.2}
+    fn new(n_barres:usize,k:f32)->Lisseur{
+        Lisseur{son: vec![0.0;n_barres], k:k}
     }
     fn update(&mut self, target: &Vec<f32>){
         if self.son.len()!=target.len(){return}
@@ -107,13 +107,13 @@ impl Lisseur {
             }
         }
     }
-    fn frac_to_percent(&self)->Vec<u32>{
-        let mut percent=vec![0;self.son.len()];
-        for i in 0..self.son.len(){
-            percent[i]=((self.son[i]*100.0).round()) as u32;
-        }
-        percent
 }
+fn frac_to_percent(son:&[f32])->Vec<u32>{
+    let mut percent=vec![0;son.len()];
+    for i in 0..son.len(){
+        percent[i]=((son[i]*100.0).round()) as u32;
+    }
+    percent
 }
 fn to_line(son:&[u32])->String{
     let mut txt=String::new();
@@ -144,32 +144,79 @@ fn get_echantillons(tuyau:&mut ChildStdout,n:usize)->Vec<f32>{
     }
     echantillon
 }
+struct Attaque{
+    barres:Vec<f32>,
+    seuil:f32,
+    gain:f32,
+    retombee:f32,
+}
+impl Attaque{
+    fn new(n_barres:usize,seuil:f32,gain:f32,retombee:f32)->Attaque{
+        Attaque{barres:vec![0.0;n_barres], seuil:seuil,gain:gain,retombee:retombee}
+    }
+    fn update(&mut self,avant:&[f32],apres:&[f32]){
+        if (self.barres.len()!=avant.len()) || (avant.len()!=apres.len()){return}
+        for i in 0..self.barres.len(){
+            let mut hausse_i=(apres[i]-avant[i]).max(0.0);
+            if hausse_i<self.seuil{
+                hausse_i=0.0;
+            }
+            else{
+                hausse_i=hausse_i*self.gain;
+            }
+            self.barres[i]=hausse_i.max(self.barres[i]*self.retombee);
 
+        }
+    }
+}
 fn main() {
     let _freq:f32=440.0;
+    //data a adapter par appareil
     let taux:f32=48000.0;
     let _device="alsa_output.pci-0000_07_00.6.analog-stereo.monitor";
     let _format="float32le";
-    let n:usize=1024;
+    let n:usize=2048;
+    //normalisation
     let plafond=0.0;
     let plancher=-80.0;
+    //apparence
     let n_barres=32;
+    let k:f32=0.1;
+    let seuil=0.1;
+    let gain=4.0;
+    let retombee=0.75;
+
     let mut child = Command::new("parec")
-        .args(["--device=alsa_output.pci-0000_07_00.6.analog-stereo.monitor", "--format=float32le", "--rate=48000", "--channels=1"])
+        .args(["--device=alsa_output.pci-0000_07_00.6.analog-stereo.monitor", "--format=float32le", "--rate=48000", "--channels=1","--latency-msec=20",])
         .stdout(Stdio::piped())
         .spawn()
         .unwrap();
 
     let mut tuyau = child.stdout.take().unwrap();
-    let mut lisseur=Lisseur::new(n_barres);
+
+    let mut lisseur=Lisseur::new(n_barres,k);
+    let mut attaque=Attaque::new(n_barres, seuil, gain, retombee);
+
     let mut planner = RealFftPlanner::<f32>::new();
     let fft = planner.plan_fft_forward(n);
+
+    let mut window=vec![0.0f32;2048];
+    let mut barres_sizes=vec![0;n_barres];
+
     loop{
-        let mut echantillons=get_echantillons(&mut tuyau,n);
+        let new_echantillons = get_echantillons(&mut tuyau, 800);
+        window.drain(..800);
+        window.extend(new_echantillons);
+        let mut echantillons=window.clone();
         let barres=analyse(&mut echantillons,fft.as_ref(),taux,n_barres,plafond,plancher);
+        let avant=lisseur.son.clone();
         lisseur.update(&barres);
-        let barres_sizes=lisseur.frac_to_percent();
-        println!("{}",to_line(&barres_sizes));
+        attaque.update(&avant, &lisseur.son);
+        barres_sizes=frac_to_percent(&lisseur.son);
+        let mut line=barres_sizes;
+        line.extend(frac_to_percent(&attaque.barres));
+        println!("{}",to_line(&line));
+        std::io::stdout().flush().unwrap();
     }
     
 }
