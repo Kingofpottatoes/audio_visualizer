@@ -177,7 +177,7 @@ fn main() {
     let _format="float32le";
     let n:usize=2048;
     //normalisation
-    let plafond=0.0;
+    let plafond=-20.0;
     let plancher=-80.0;
     //apparence
     let n_barres=32;

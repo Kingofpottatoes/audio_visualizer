@@ -9,7 +9,8 @@ FloatingWindow{
     Visualizer{
         path: "/home/king/Code/Rust/src/audio_visualizer/target/release/audio_visualizer"
         anchors.fill:parent
-        barColor:"orange" //plutot ici la couleur caelestia
+        barColor1:"orange" //plutot ici la couleur caelestia
+        barColor2:"yellow"
         accent:"red"
     }
 }
