@@ -1,9 +1,8 @@
+use std::io::Read;
+use std::process::{ChildStdout, Command, Stdio};
+use realfft::{RealFftPlanner, RealToComplex};
 
-use std::{thread::sleep, time::Duration};
-
-use realfft::RealFftPlanner;
-
-fn get_sin(freq:f32, taux:f32, n:usize)->Vec<f32>{
+fn _get_sin(freq:f32, taux:f32, n:usize)->Vec<f32>{
     let mut echantillon = vec![0.0f32;n];
     let pi=std::f32::consts::PI;
     for i in 0..n {
@@ -12,9 +11,8 @@ fn get_sin(freq:f32, taux:f32, n:usize)->Vec<f32>{
     echantillon
 }
 
-fn get_amplitudes(signal:&Vec<f32>)->Vec<f32>{
-    let mut planner = RealFftPlanner::<f32>::new();
-    let fft = planner.plan_fft_forward(signal.len());
+fn get_amplitudes(fft: &dyn RealToComplex<f32>,signal:&mut Vec<f32>)->Vec<f32>{
+   
     let mut entree = fft.make_input_vec();
     let mut sortie = fft.make_output_vec();
 
@@ -30,7 +28,7 @@ fn get_amplitudes(signal:&Vec<f32>)->Vec<f32>{
     output
 }
 
-fn i_max(vec: &Vec<f32>)->usize{
+fn _i_max(vec: &Vec<f32>)->usize{
     let mut max=0;
     for i in 0..vec.len(){
         if vec[i]>vec[max]{
@@ -125,9 +123,9 @@ fn to_line(son:&[u32])->String{
     }
     txt
 }
-fn analyse(signal:&mut Vec<f32>,taux:f32,n_barres:usize,plafond:f32,plancher:f32)->Vec<f32>{
+fn analyse(signal:&mut Vec<f32>,fft: &dyn RealToComplex<f32>,taux:f32,n_barres:usize,plafond:f32,plancher:f32)->Vec<f32>{
     applies_hann(signal);
-    let amplitude=get_amplitudes(signal);
+    let amplitude=get_amplitudes(fft,signal);
     let mut bandes=get_bandes(&amplitude, taux, n_barres);
     for i in 0..bandes.len(){
         bandes[i]=amplitude_to_decibels(bandes[i], signal.len());
@@ -135,23 +133,43 @@ fn analyse(signal:&mut Vec<f32>,taux:f32,n_barres:usize,plafond:f32,plancher:f32
     }
     bandes
 }
+fn get_echantillons(tuyau:&mut ChildStdout,n:usize)->Vec<f32>{
+    let mut tampon=vec![0;n*4];
+    tuyau.read_exact(&mut tampon).unwrap();
+    let mut echantillon=vec![0.0;n];
+    let mut i:usize=0;
+    for bytes in tampon.chunks_exact(4){
+        echantillon[i]=f32::from_le_bytes(bytes.try_into().unwrap());
+        i+=1;
+    }
+    echantillon
+}
+
 fn main() {
-    let freq:f32=440.0;
-    let taux:f32=44100.0;
-    let n:usize=2048;
+    let _freq:f32=440.0;
+    let taux:f32=48000.0;
+    let _device="alsa_output.pci-0000_07_00.6.analog-stereo.monitor";
+    let _format="float32le";
+    let n:usize=1024;
     let plafond=0.0;
     let plancher=-80.0;
     let n_barres=32;
+    let mut child = Command::new("parec")
+        .args(["--device=alsa_output.pci-0000_07_00.6.analog-stereo.monitor", "--format=float32le", "--rate=48000", "--channels=1"])
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    let mut tuyau = child.stdout.take().unwrap();
     let mut lisseur=Lisseur::new(n_barres);
-    let mut frame: u32 = 0;
+    let mut planner = RealFftPlanner::<f32>::new();
+    let fft = planner.plan_fft_forward(n);
     loop{
-        let mut echantillons=get_sin(freq+(5.0*(frame as f32)), taux, n);
-        let barres=analyse(&mut echantillons,taux,n_barres,plafond,plancher);
+        let mut echantillons=get_echantillons(&mut tuyau,n);
+        let barres=analyse(&mut echantillons,fft.as_ref(),taux,n_barres,plafond,plancher);
         lisseur.update(&barres);
         let barres_sizes=lisseur.frac_to_percent();
         println!("{}",to_line(&barres_sizes));
-        sleep(Duration::from_millis(10));
-        frame+=1;
     }
     
 }
