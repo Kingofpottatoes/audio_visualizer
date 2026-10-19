@@ -1,7 +1,10 @@
 [package]
-name = "audio_visualizer"
+name = "audio-visualizer"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 realfft = "3.5.0"
+
+[profile.release]
+strip = true
