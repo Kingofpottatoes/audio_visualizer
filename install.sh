@@ -14,7 +14,7 @@ if [ "${1:-}" = "--uninstall" ]; then
     exit 0
 fi
 
-if [ "$(uname -s)" !="Linux" ] || [ "$(uname -m)" != "x86_64" ]; then
+if [ "$(uname -s)" != "Linux" ] || [ "$(uname -m)" != "x86_64" ]; then
     echo "Error this is only available on Linux Currently">&2
     exit 1
 fi
