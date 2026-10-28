@@ -22,8 +22,6 @@ The following tools are required to run the project:
 - `parec` and `pactl`, provided by PulseAudio-compatible audio utilities
 - A working PulseAudio or PipeWire audio setup
 
-The project also includes an installation script that can compile the Rust executable if the expected binary is not already available. If compilation is needed, Rust and Cargo must be installed.
-
 ## Installation
 
 Make sure the prebuilt audio-visualizer executable and the quickshell/ directory are present in the project root.
