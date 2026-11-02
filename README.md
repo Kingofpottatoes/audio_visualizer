@@ -65,7 +65,8 @@ The visualizer relies on your existing Linux audio setup. Make sure PulseAudio o
 
 ## AI Notice:
 AI have been used to know how to process a sound signal using fft and hans, as well as how to send data to the qml, and learn the syntax of these two language, but all the code and logic are human.
-part of this readme is AI generated, because it looked more proffesional.
+
+part of this readme is AI generated, because it looked more profesional.
 The installation script, is also ai
 
 i will probably edit this later to add it to my desktop : https://github.com/Kingofpottatoes/potato-shell
