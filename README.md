@@ -55,31 +55,17 @@ qs -c audio-visualizer
 The visualizer relies on your existing Linux audio setup. Make sure PulseAudio or PipeWire is running and that the required audio commands are available.
 
 
-
-## Project Structure
-
-```text
-audio_visualizer/
-├── src/          # Rust source code
-├── quickshell/   # Quickshell/QML interface
-├── install.sh    # Installation script
-├── Cargo.toml    # Rust package manifest
-└── Cargo.lock    # Locked dependency versions
-```
-
-## Technologies
+## what i used to build it 
 
 - [Rust](https://www.rust-lang.org/) — audio processing
 - [Quickshell](https://quickshell.org/) — desktop integration and QML runtime
 - [QML](https://doc.qt.io/qt-6/qmlapplications.html) — visualization interface
 - [PulseAudio](https://www.freedesktop.org/wiki/Software/PulseAudio/) / [PipeWire](https://pipewire.org/) — audio infrastructure
 
-## License
 
-This project is intended to be released under the **MIT License**.
+## AI Notice:
+AI have been used to know how to process a sound signal using fft and hans, as well as how to send data to the qml, and learn the syntax of these two language, but all the code and logic are human.
+part of this readme is AI generated, because it looked more proffesional.
+The installation script, is also ai
 
-A `LICENSE` file containing the complete MIT License text should be included in the repository before distributing the project under that license.
-
-## Status
-
-This is a personal project under development. Features, installation steps, and implementation details may evolve over time.
+i will probably edit this later to add it to my desktop : https://github.com/Kingofpottatoes/potato-shell
