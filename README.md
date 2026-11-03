@@ -1,21 +1,21 @@
 # Audio Visualizer
 
-A real-time audio visualizer for Linux, built with **Rust** and **Quickshell/QML**.
+cool audio visualizer for Linux, built with **Rust** and **Quickshell/QML**.
 
-The project uses Rust for audio processing and Quickshell/QML to render the visualization on the desktop. Audio data is captured through `parec`, using the PulseAudio-compatible audio interface provided by PulseAudio or PipeWire.
+The project uses Rust for audio processing and Quickshell/QML to render the visualization on the desktop as a floating window. I will integrate it to my desktop shell later : https://github.com/Kingofpottatoes/potato-shell. Audio data is captured through `parec`, using the PulseAudio-compatible audio interface provided by PulseAudio or PipeWire.
 
 ## Features
 
 - **Real-time visualization** of audio input.
 - **Rust-based audio processing**.
 - **Quickshell/QML interface** for desktop rendering.
-- **PulseAudio / PipeWire compatibility** through `parec`.
-- **Native Linux integration** using Quickshell.
+- **PulseAudio / PipeWire compatibility** through `parec`. -# calling that compatibility is a little joke, its more a dependencies x)
+- **Native Linux integration** using Quickshell. -# Because i built it on linux and dont know if its possible to use quickshell on windows
 - **Cool coloration :)**
 
 ## Requirements
 
-The following tools are required to run the project:
+You should have:
 
 - Linux on x86_64
 - [Quickshell](https://quickshell.org/) (`qs`)
@@ -44,7 +44,7 @@ To remove the installed executable and Quickshell configuration, run the followi
 
 ./install.sh --uninstall
 
-This removes the installed audio-visualizer executable and the configuration directory created for this application.
+This removes the installed audio-visualizer executable and the configuration directory created for this app.
 
 ## Usage
 
