@@ -9,8 +9,8 @@ The project uses Rust for audio processing and Quickshell/QML to render the visu
 - **Real-time visualization** of audio input.
 - **Rust-based audio processing**.
 - **Quickshell/QML interface** for desktop rendering.
-- **PulseAudio / PipeWire compatibility** through `parec`. -# calling that compatibility is a little joke, its more a dependencies x)
-- **Native Linux integration** using Quickshell. -# Because i built it on linux and dont know if its possible to use quickshell on windows
+- **PulseAudio / PipeWire compatibility** through `parec`. <small> calling that compatibility is a little joke, its more a dependencies x)</small>
+- **Native Linux integration** using Quickshell. <small> Because i built it on linux and dont know if its possible to use quickshell on windows </small>
 - **Cool coloration :)**
 
 ## Requirements
