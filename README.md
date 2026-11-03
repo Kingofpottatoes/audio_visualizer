@@ -36,6 +36,8 @@ ${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/audio-visualizer/
 
 No Rust compilation is performed by the installation script. The prebuilt executable must be provided separately.
 
+(its on the releases)
+
 ## Uninstallation
 
 To remove the installed executable and Quickshell configuration, run the following command from the project directory:
@@ -69,4 +71,4 @@ AI have been used to know how to process a sound signal using fft and hans, as w
 part of this readme is AI generated, because it looked more profesional.
 The installation script, is also ai
 
-i will probably edit this later to add it to my desktop : https://github.com/Kingofpottatoes/potato-shell
+i will probably edit this later to add it to my desktop : https://github.com/Kingofpottatoes/potato-shell but im currently to lazy to do it/working on other things
