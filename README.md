@@ -6,58 +6,61 @@ The project uses Rust for audio processing and Quickshell/QML to render the visu
 
 ## Features
 
-- **Real-time visualization** of audio input.
-- **Rust-based audio processing**.
-- **Quickshell/QML interface** for desktop rendering.
-- **PulseAudio / PipeWire compatibility** through `parec`. <p style="color: gray; font-size: 0.8em;"> calling that compatibility is a little joke, its more a dependencies x)</p>
-- **Native Linux integration** using Quickshell. <p style="color: gray; font-size: 0.8em;"> Because i built it on linux and dont know if its possible to use quickshell on windows </p>
-- **Cool coloration :)**
+- Shows the audio playing through your current default output device.
+- Splits the spectrum into **32 frequency bands**, spaced logarithmically from 50 Hz to 12 kHz.
+- Uses an FFT with a Hann window to analyse the incoming audio.
+- Smooths the bar levels so they do not jump around, while still reacting quickly when the sound gets louder.
+- Calculates a separate attack value for each band. These values make the bars react to sudden changes and drive the accent effect in the QML visualizer.
+- Draws the result in a Quickshell window, with the visual part handled by QML.
 
 ## Requirements
 
-You should have:
+This release is currently built for **Linux x86_64**. You also need:
 
-- Linux on x86_64
-- [Quickshell](https://quickshell.org/) (`qs`)
-- `parec` and `pactl`, provided by PulseAudio-compatible audio utilities
-- A working PulseAudio or PipeWire audio setup
+- [Quickshell](https://quickshell.org/) and its `qs` command.
+- `parec` and `pactl`, which are provided by PulseAudio-compatible audio utilities.
+- A running PulseAudio server, or PipeWire with its PulseAudio compatibility layer enabled.
+- A default output device with a monitor source available, so the visualizer can read the audio being played.
+
+The installer checks the architecture and looks for `qs`, `parec` and `pactl` before copying the files.
 
 ## Installation
 
-Make sure the prebuilt audio-visualizer executable and the quickshell/ directory are present in the project root.
-Run the installation script:
+1. Open the [releases page](https://github.com/Kingofpottatoes/audio_visualizer/releases) and download the source-code archive and the `audio-visualizer` binary from the latest release.
+2. Extract the source archive.
+3. Put the downloaded `audio-visualizer` binary in the extracted project folder. It must sit next to `install.sh` and the `quickshell/` directory.
+4. Open a terminal in that folder and run:
 
 ```bash
+chmod +x install.sh
 ./install.sh
 ```
-The script checks the system architecture and required commands, then installs the executable to ~/.local/bin/ and the Quickshell configuration to:
 
-${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/audio-visualizer/
+The script installs the executable to `~/.local/bin/` and copies the Quickshell files to `${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/audio-visualizer/`. It also writes the installed binary's path into the Quickshell configuration.
 
-No Rust compilation is performed by the installation script. The prebuilt executable must be provided separately.
-
-(its on the releases)
+You do not need Rust or Cargo to install the release binary. The installer does not compile the project.
 
 ## Uninstallation
 
 To remove the installed executable and Quickshell configuration, run the following command from the project directory:
 
+```bash
 ./install.sh --uninstall
+```
 
 This removes the installed audio-visualizer executable and the configuration directory created for this app.
 
 ## Usage
 
-After installation, launch the visualizer with:
+Once the installation has finished, start it from a terminal with:
 
 ```bash
 qs -c audio-visualizer
 ```
 
-The visualizer relies on your existing Linux audio setup. Make sure PulseAudio or PipeWire is running and that the required audio commands are available.
+The visualizer follows the monitor source of your current default audio output. Play something through that output and the bars should start moving. If there is no activity, check that PulseAudio or PipeWire is running and that `pactl get-default-sink` returns a device with a working monitor source.
 
-
-## what i used to build it 
+## what i used to build it
 
 - [Rust](https://www.rust-lang.org/) — audio processing
 - [Quickshell](https://quickshell.org/) — desktop integration and QML runtime
