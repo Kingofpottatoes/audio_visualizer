@@ -5,73 +5,65 @@ cool audio visualizer for Linux, built with **Rust** and **Quickshell/QML**.
 The project uses Rust for audio processing and Quickshell/QML to render the visualization on the desktop as a floating window. I will integrate it to my desktop shell later : https://github.com/Kingofpottatoes/potato-shell. Audio data is captured through `parec`, using the PulseAudio-compatible audio interface provided by PulseAudio or PipeWire.
 
 ## Features
-
-- Shows the audio playing through your current default output device.
-- Splits the spectrum into **32 frequency bands**, spaced logarithmically from 50 Hz to 12 kHz.
+- 32 band from 50 Hz to 12 kHz, log spaced, because that's how we hear the sound 
 - Uses an FFT with a Hann window to analyse the incoming audio.
-- Smooths the bar levels so they do not jump around, while still reacting quickly when the sound gets louder.
-- Calculates a separate attack value for each band. These values make the bars react to sudden changes and drive the accent effect in the QML visualizer.
-- Draws the result in a Quickshell window, with the visual part handled by QML.
+- animate a smooth drop of the bar when they drop, but instant upgrade if its an increase
+- Calculates a separate attack value for each band. Used to make an effect when the sound increase quickly (on a beat for exemple)
+- Draws the result in a Quickshell window, with the visual part handled by QML, because i want to integrate it in my shell, and its built in qml.
 
 ## Requirements
 
-This release is currently built for **Linux x86_64**. You also need:
+This project is made on, and for **Linux x86_64**. You should have:
 
-- [Quickshell](https://quickshell.org/) and its `qs` command.
-- `parec` and `pactl`, which are provided by PulseAudio-compatible audio utilities.
-- A running PulseAudio server, or PipeWire with its PulseAudio compatibility layer enabled.
-- A default output device with a monitor source available, so the visualizer can read the audio being played.
+- [Quickshell](https://quickshell.org/). or you dont have any window
+- `parec` and `pactl`, which are provided by PulseAudio-compatible audio utilities, or the bar will never show
+- A running PulseAudio server, or PipeWire with its PulseAudio compatibility layer enabled, to get the sound
+- A default output device with a monitor source
 
-The installer checks the architecture and looks for `qs`, `parec` and `pactl` before copying the files.
+The installer checks if you have all the requirements before copying the files.
 
 ## Installation
 
-1. Open the [releases page](https://github.com/Kingofpottatoes/audio_visualizer/releases) and download the source-code archive and the `audio-visualizer` binary from the latest release.
-2. Extract the source archive.
-3. Put the downloaded `audio-visualizer` binary in the extracted project folder. It must sit next to `install.sh` and the `quickshell/` directory.
-4. Open a terminal in that folder and run:
+Download the release, put the binary next to install.sh and run the script with :
 
 ```bash
 chmod +x install.sh
 ./install.sh
 ```
 
-The script installs the executable to `~/.local/bin/` and copies the Quickshell files to `${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/audio-visualizer/`. It also writes the installed binary's path into the Quickshell configuration.
-
-You do not need Rust or Cargo to install the release binary. The installer does not compile the project.
+The script moves the binary to `~/.local/bin/` and the quickshell files to `${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/audio-visualizer/`. and link the binary path to the qml Process component that needs it
 
 ## Uninstallation
 
-To remove the installed executable and Quickshell configuration, run the following command from the project directory:
+To uninstall, run from your project root:
 
 ```bash
 ./install.sh --uninstall
 ```
 
-This removes the installed audio-visualizer executable and the configuration directory created for this app.
-
 ## Usage
 
-Once the installation has finished, start it from a terminal with:
+Launch it with:
 
 ```bash
 qs -c audio-visualizer
 ```
 
-The visualizer follows the monitor source of your current default audio output. Play something through that output and the bars should start moving. If there is no activity, check that PulseAudio or PipeWire is running and that `pactl get-default-sink` returns a device with a working monitor source.
+Play some music, if nothing moves, check that pactl get-default-sink gives you something.
 
 ## what i used to build it
 
-- [Rust](https://www.rust-lang.org/) — audio processing
-- [Quickshell](https://quickshell.org/) — desktop integration and QML runtime
-- [QML](https://doc.qt.io/qt-6/qmlapplications.html) — visualization interface
-- [PulseAudio](https://www.freedesktop.org/wiki/Software/PulseAudio/) / [PipeWire](https://pipewire.org/) — audio infrastructure
+- [Rust](https://www.rust-lang.org/) for audio processing
+- [Quickshell](https://quickshell.org/) for desktop integration and QML runtime
+- [QML](https://doc.qt.io/qt-6/qmlapplications.html) for visualization interface
+- [PulseAudio](https://www.freedesktop.org/wiki/Software/PulseAudio/) / [PipeWire](https://pipewire.org/) for audio infrastructure
 
 
 ## AI Notice:
-AI have been used to know how to process a sound signal using fft and hans, as well as how to send data to the qml, and learn the syntax of these two language, but all the code and logic are human.
+AI has been used to know how to process a sound signal using fft and hans, as well as how to send data to the qml, and learn the syntax of these two language, but all the code and logic are human.
 
-part of this readme is AI generated, because it looked more profesional.
-The installation script, is also ai
+I gave up to have a professional looking README.
+
+The installation script, is ai
 
 i will probably edit this later to add it to my desktop : https://github.com/Kingofpottatoes/potato-shell but im currently to lazy to do it/working on other things
